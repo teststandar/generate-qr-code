@@ -5,12 +5,13 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 # Nama file Excel dan nama sheet
-excel_file = "list-link-2.xlsx"
-# excel_file = "test.xlsx"
+# excel_file = "list-link-2.xlsx"
+excel_file = "test.xlsx"
 sheet_name = "Sheet1"
 colom_name = "Links"
 kanwil_qr = "Kanwil"
 cabang_qr = "Cabang"
+# area_qr = "Area"
 output_folder = "qrcodes"
 nomor = "NO"
 kode_cb = "Kode Cabang"
@@ -52,38 +53,31 @@ for index , row in df.iterrows():
 
     # Tambahkan watermark
     draw = ImageDraw.Draw(qr)
-    font_size = 20
-    font_size = qr.size[0] // 15  # Font size proporsional dengan ukuran QR
-
-    try:
-        font = ImageFont.truetype("arial.ttf", font_size)  # Windows
-    except:
-        font = ImageFont.load_default()  # Linux/Mac tanpa arial.ttf
-
     text = str(kode_cabang) + " - " + cabang_name  # Watermark
-    text_width, text_height = draw.font(text, font=font)
 
-    # # Posisi teks di kiri bawah
-    text_x = 10  # Beri jarak 10px dari kiri
-    text_y = 580  # Beri jarak 10px dari bawah
+    # Mulai dari ukuran font besar, turunkan jika tidak muat
+    max_width = qr.size[0] - 20  # Maks lebar teks (beri padding 10px kiri-kanan)
+    font_size = qr.size[0] // 10
 
-    # Ambil ukuran teks untuk penempatan yang akurat
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
+    while font_size > 10:
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+
+        if text_width <= max_width:
+            break  # Ukuran cukup, keluar loop
+        font_size -= 1  # Perkecil font
+
+    # Hitung ulang posisi setelah dapat font yang pas
     text_height = text_bbox[3] - text_bbox[1]
+    text_x = (qr.size[0] - text_width) / 2
+    text_y = qr.size[1] - text_height - 10
 
-    # # Posisi teks di kiri bawah, dengan padding
-    padding_x = 10
-    padding_y = 10
-    text_x = padding_x  # 10px dari kiri
-    text_y = qr.size[1] - text_height - padding_y  # 10px dari bawah
-
-    # Posisi teks di tengah bawah, dengan padding 10px
-    text_x = (qr.size[0] - text_width) / 2  # Tengah
-    text_y = qr.size[1] - text_height - 10  # 10px dari bawah
-
-    draw.text((text_x, text_y), text, font=font, fill=(0, 255, 0))  # Warna hijau (RGB)
-    draw.text((text_x, text_y), text, font=font, fill=(255, 0, 0))  # Warna merah (RGB)
+    draw.text((text_x, text_y), text, font=font, fill=(255, 0, 0))
     
     # Simpan QR Code dengan nama berdasarkan indeks atau isi link
     qr_filename = os.path.join(output_folder, str(no)+" " +kanwil_name+"-"+cabang_name+f".png")
