@@ -3,6 +3,7 @@ import pandas as pd
 import qrcode
 import os
 from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
 
 # Nama file Excel dan nama sheet
 # excel_file = "list-link-2.xlsx"
@@ -60,10 +61,17 @@ for index , row in df.iterrows():
     font_size = qr.size[0] // 10
 
     while font_size > 10:
-        try:
-            font = ImageFont.truetype("arial.ttf", font_size)
-        except:
+        #windows
+        # try:
+        #     font = ImageFont.truetype("arial.ttf", font_size)
+        # except:
+        #     font = ImageFont.load_default()
+        #mac
+        font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
+        if not Path(font_path).exists():
             font = ImageFont.load_default()
+        else:
+            font = ImageFont.truetype(font_path, font_size)
 
         text_bbox = draw.textbbox((0, 0), text, font=font)
         text_width = text_bbox[2] - text_bbox[0]
